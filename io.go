@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/harukasan/go-libwebp/webp"
+	"github.com/chai2010/webp"
 
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
@@ -160,21 +160,24 @@ func FormatFromFilename(filename string) (Format, error) {
 }
 
 type encodeConfig struct {
-	jpegQuality          int
-	gifNumColors         int
-	gifQuantizer         draw.Quantizer
-	gifDrawer            draw.Drawer
-	pngCompressionLevel  png.CompressionLevel
-	webpCompressionLevel int
+	jpegQuality            int
+	gifNumColors           int
+	gifQuantizer           draw.Quantizer
+	gifDrawer              draw.Drawer
+	pngCompressionLevel    png.CompressionLevel
+	webpCompressionOptions webp.Options
 }
 
 var defaultEncodeConfig = encodeConfig{
-	jpegQuality:          95,
-	gifNumColors:         256,
-	gifQuantizer:         nil,
-	gifDrawer:            nil,
-	pngCompressionLevel:  png.DefaultCompression,
-	webpCompressionLevel: 2,
+	jpegQuality:         95,
+	gifNumColors:        256,
+	gifQuantizer:        nil,
+	gifDrawer:           nil,
+	pngCompressionLevel: png.DefaultCompression,
+	webpCompressionOptions: webp.Options{
+		Lossless: true,
+		Quality:  webp.DefaulQuality,
+	},
 }
 
 // EncodeOption sets an optional parameter for the Encode and Save functions.
@@ -220,12 +223,14 @@ func PNGCompressionLevel(level png.CompressionLevel) EncodeOption {
 	}
 }
 
-// WebPCompressionLevel returns an EncodeOption that sets the compression level
-// of the WebP-encoded image. This can be between 0 (fastest, lowest
-// compression) and 9 (slower, best compression). Default is 2.
-func WebPCompressionLevel(level int) EncodeOption {
+// WebPCompressionLevel sets losesless compression and
+// quality. (Between 0 and 100). By the default is 90
+func WebPCompressionLevel(lossless bool, quality int) EncodeOption {
 	return func(c *encodeConfig) {
-		c.webpCompressionLevel = level
+		c.webpCompressionOptions = webp.Options{
+			Lossless: lossless,
+			Quality:  float32(quality),
+		}
 	}
 }
 
@@ -266,11 +271,8 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 		return bmp.Encode(w, img)
 
 	case WEBP:
-		c, err := webp.ConfigLosslessPreset(cfg.webpCompressionLevel)
-		if err != nil {
-			return err
-		}
-		return webp.EncodeRGBA(w, img, c)
+		return webp.Encode(w, img, &cfg.webpCompressionOptions)
+
 	}
 
 	return ErrUnsupportedFormat
