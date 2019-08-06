@@ -1,9 +1,7 @@
 # Imaging
 
-[![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
-[![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
-[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master&service=github)](https://coveralls.io/github/disintegration/imaging?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/disintegration/imaging)](https://goreportcard.com/report/github.com/disintegration/imaging)
+[![GoDoc](https://godoc.org/github.com/abelkuruvilla/imaging?status.svg)](https://godoc.org/github.com/abelkuruvilla/imaging)
+[![Go Report Card](https://goreportcard.com/badge/github.com/abelkuruvilla/imaging)](https://goreportcard.com/report/github.com/abelkuruvilla/imaging)
 
 Package imaging provides basic image processing functions (resize, rotate, crop, brightness/contrast adjustments, etc.).
 
