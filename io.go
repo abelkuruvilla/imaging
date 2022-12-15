@@ -6,13 +6,14 @@ import (
 	"image"
 	"image/draw"
 	"image/gif"
-	"image/jpeg"
 	"image/png"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/zhnxin/golang-image/jpeg"
 
 	"github.com/chai2010/webp"
 
@@ -93,7 +94,6 @@ func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
 //
 //	// Load an image and transform it depending on the EXIF orientation tag (if present).
 //	img, err := imaging.Open("test.jpg", imaging.AutoOrientation(true))
-//
 func Open(filename string, opts ...DecodeOption) (image.Image, error) {
 	file, err := fs.Open(filename)
 	if err != nil {
@@ -114,6 +114,7 @@ const (
 	TIFF
 	BMP
 	WEBP
+	JFIF
 )
 
 var formatExts = map[string]Format{
@@ -125,6 +126,7 @@ var formatExts = map[string]Format{
 	"tiff": TIFF,
 	"bmp":  BMP,
 	"webp": WEBP,
+	"jfif": JFIF,
 }
 
 var formatNames = map[Format]string{
@@ -134,6 +136,7 @@ var formatNames = map[Format]string{
 	TIFF: "TIFF",
 	BMP:  "BMP",
 	WEBP: "WEBP",
+	JFIF: "JFIF",
 }
 
 func (f Format) String() string {
@@ -273,6 +276,17 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 	case WEBP:
 		return webp.Encode(w, img, &cfg.webpCompressionOptions)
 
+	case JFIF:
+		if nrgba, ok := img.(*image.NRGBA); ok && nrgba.Opaque() {
+			rgba := &image.RGBA{
+				Pix:    nrgba.Pix,
+				Stride: nrgba.Stride,
+				Rect:   nrgba.Rect,
+			}
+			return jpeg.Encode(w, rgba, &jpeg.Options{Quality: cfg.jpegQuality})
+		}
+		jfif := jpeg.NewJfif()
+		return jpeg.EncodeWithJfif(w, img, jfif, &jpeg.Options{Quality: cfg.jpegQuality})
 	}
 
 	return ErrUnsupportedFormat
@@ -289,7 +303,6 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 //
 //	// Save the image as JPEG with optional quality parameter set to 80.
 //	err := imaging.Save(img, "out.jpg", imaging.JPEGQuality(80))
-//
 func Save(img image.Image, filename string, opts ...EncodeOption) (err error) {
 	f, err := FormatFromFilename(filename)
 	if err != nil {
